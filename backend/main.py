@@ -35,17 +35,15 @@ def login(user: Login):
         return {"message": "Login successful"}
 
     return {"message": "Invalid email or password"}
-   @app.get("/bin")
+  @app.get("/bin")
 def get_bin_data():
 
-    data = bins.find_one()
-
-    print("DATA FROM DB:", data)
+    data = bins.find_one({}, {"_id": 0})
 
     if data:
-        return {
-            "current_level": data.get("current_level", 0),
-            "history": data.get("history", [])
-        }
+        return data
 
-    return {"current_level": 0, "history": []}
+    return {
+        "current_level": 0,
+        "history": []
+    }
