@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>Smart Disposal Login</title>
+
 <style>
 
 body{
@@ -17,20 +18,21 @@ height:100vh;
 background:white;
 padding:30px;
 border-radius:10px;
-width:320px;
+width:300px;
 text-align:center;
+box-shadow:0px 5px 10px rgba(0,0,0,0.2);
 }
 
 input{
-width:100%;
+width:90%;
 padding:10px;
 margin:10px 0;
-border:1px solid #ccc;
 border-radius:5px;
+border:1px solid #ccc;
 }
 
 button{
-width:100%;
+width:95%;
 padding:10px;
 background:#2c7be5;
 color:white;
@@ -44,6 +46,7 @@ background:#1a5edb;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -76,28 +79,34 @@ e.preventDefault()
 let email = document.getElementById("email").value
 let password = document.getElementById("password").value
 
-let response = await fetch("http://127.0.0.1:8000/login", {
+try{
 
-method: "POST",
+let response = await fetch("http://127.0.0.1:8000/login",{
 
-headers: {
-"Content-Type": "application/json"
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
 },
 
-body: JSON.stringify({
-email: email,
-password: password
+body:JSON.stringify({
+email:email,
+password:password
 })
 
 })
 
 let data = await response.json()
 
+document.getElementById("message").innerText = data.message
+
 if(data.message === "Login successful"){
 window.location.href = "dashboard.html"
 }
-else{
-document.getElementById("message").innerText = data.message
+
+}
+catch(error){
+document.getElementById("message").innerText = "Server not running"
 }
 
 })
