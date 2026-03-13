@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pymongo import MongoClient
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -11,41 +12,20 @@ users = db.users
 bins = db.bin_levels
 
 
+class Login(BaseModel):
+    email: str
+    password: str
+
+
 @app.post("/login")
-@app.post("/login")
-def login(user: dict):
+def login(user: Login):
 
     db_user = users.find_one({
-        "email": user["email"],
-        "password": user["password"]
+        "email": user.email,
+        "password": user.password
     })
 
     if db_user:
-        return {"message":"Login successful"}
+        return {"message": "Login successful"}
 
-    return {"message":"Invalid login"}
-
-
-@app.get("/bin-data")
-@app.get("/bin-data")
-def bin_data():
-
-    data = list(bins.find())
-
-    if not data:
-        return {"current_level":0,"history":[]}
-
-    latest = data[-1]
-
-    history = []
-
-    for item in data:
-        history.append({
-            "time": item["time"],
-            "level": item["level"]
-        })
-
-    return {
-        "current_level": latest["level"],
-        "history": history
-    }
+    return {"message": "Invalid email or password"}
