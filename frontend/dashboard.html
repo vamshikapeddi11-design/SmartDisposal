@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Disposal Dashboard</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f6f9;
+text-align:center;
+}
+
+.header{
+background:#2c7be5;
+color:white;
+padding:15px;
+}
+
+.container{
+margin-top:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+margin:20px auto;
+width:400px;
+border-radius:10px;
+box-shadow:0 5px 10px rgba(0,0,0,0.2);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+table, th, td{
+border:1px solid #ccc;
+}
+
+th, td{
+padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<h2>Smart Disposal Dashboard</h2>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h3>Current Bin Level</h3>
+<p id="binLevel">Loading...</p>
+</div>
+
+<div class="card">
+<h3>Past Bin History</h3>
+
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Level (%)</th>
+</tr>
+</thead>
+
+<tbody id="historyTable">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+async function loadDashboard(){
+
+let response = await fetch("http://127.0.0.1:8000/bin-data")
+let data = await response.json()
+
+document.getElementById("binLevel").innerText = data.current_level + "%"
+
+let table = document.getElementById("historyTable")
+
+data.history.forEach(item => {
+
+let row = `<tr>
+<td>${item.time}</td>
+<td>${item.level}%</td>
+</tr>`
+
+table.innerHTML += row
+
+})
+
+}
+
+loadDashboard()
+
+</script>
+
+</body>
+</html>
