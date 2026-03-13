@@ -9,28 +9,72 @@
 body{
 font-family: Arial;
 background:#f4f4f4;
+margin:0;
+}
+
+.header{
 text-align:center;
+background:#2c7be5;
+color:white;
+padding:20px;
 }
 
 .container{
-margin-top:50px;
+display:flex;
+justify-content:space-between;
+padding:20px;
+}
+
+.left{
+width:45%;
+}
+
+.right{
+width:45%;
+}
+
+.box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0px 4px 8px rgba(0,0,0,0.2);
+margin-bottom:20px;
 }
 
 #binLevel{
-font-size:32px;
-color:green;
+font-size:35px;
 font-weight:bold;
+color:green;
+text-align:center;
+}
+
+button{
+padding:10px 20px;
+margin:10px;
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
 }
 
 table{
-margin:auto;
-margin-top:20px;
+width:100%;
 border-collapse:collapse;
+margin-top:10px;
+display:none;
 }
 
 th,td{
-border:1px solid black;
-padding:10px 20px;
+border:1px solid #ccc;
+padding:10px;
+text-align:center;
+}
+
+.alert{
+color:red;
+font-weight:bold;
+font-size:20px;
 }
 
 </style>
@@ -39,28 +83,63 @@ padding:10px 20px;
 
 <body>
 
+<div class="header">
+<h1>Smart Disposal Dashboard</h1>
+</div>
+
 <div class="container">
 
-<h1>Smart Disposal Dashboard</h1>
+<div class="left">
+
+<div class="box">
 
 <h2>Current Bin Level</h2>
 
 <p id="binLevel">Loading...</p>
 
-<h2>Bin History</h2>
+</div>
+
+<div class="box">
+
+<h2>Alert Section</h2>
+
+<p id="alertMessage">No alerts</p>
+
+</div>
+
+</div>
+
+<div class="right">
+
+<div class="box">
+
+<button onclick="showBinHistory()">View Bin History</button>
+<button onclick="showAlertHistory()">View Alert History</button>
 
 <table id="historyTable">
-
 <tr>
 <th>Time</th>
 <th>Level</th>
 </tr>
+</table>
 
+<table id="alertTable">
+<tr>
+<th>Time</th>
+<th>Alert</th>
+</tr>
 </table>
 
 </div>
 
+</div>
+
+</div>
+
 <script>
+
+let binHistory=[]
+let alertHistory=[]
 
 async function loadData(){
 
@@ -70,33 +149,94 @@ let response = await fetch("http://127.0.0.1:8000/bin")
 
 let data = await response.json()
 
-// Show current level
 document.getElementById("binLevel").innerText =
 data.current_level + "%"
 
-// Show history
-let table = document.getElementById("historyTable")
+binHistory = data.history || []
 
-data.history.forEach(item => {
+if(data.current_level >= 80){
 
-let row = table.insertRow()
+let msg="The bin is full"
 
-let cell1 = row.insertCell(0)
-let cell2 = row.insertCell(1)
+document.getElementById("alertMessage").innerHTML =
+'<span class="alert">'+msg+'</span>'
 
-cell1.innerText = item.time
-cell2.innerText = item.level + "%"
+let time = new Date().toLocaleTimeString()
+
+alertHistory.push({time:time,msg:msg})
+
+}
+
+}
+catch(error){
+
+document.getElementById("binLevel").innerText="Error loading data"
+
+}
+
+}
+
+function showBinHistory(){
+
+let table=document.getElementById("historyTable")
+
+table.style.display="table"
+
+table.innerHTML="<tr><th>Time</th><th>Level</th></tr>"
+
+if(binHistory.length===0){
+
+let row=table.insertRow()
+let cell=row.insertCell(0)
+
+cell.colSpan=2
+cell.innerText="No history available"
+
+return
+}
+
+binHistory.forEach(item=>{
+
+let row=table.insertRow()
+
+row.insertCell(0).innerText=item.time
+row.insertCell(1).innerText=item.level+"%"
 
 })
 
 }
-catch(error){
-document.getElementById("binLevel").innerText="Error loading data"
+
+function showAlertHistory(){
+
+let table=document.getElementById("alertTable")
+
+table.style.display="table"
+
+table.innerHTML="<tr><th>Time</th><th>Alert</th></tr>"
+
+if(alertHistory.length===0){
+
+let row=table.insertRow()
+let cell=row.insertCell(0)
+
+cell.colSpan=2
+cell.innerText="No alerts"
+
+return
 }
+
+alertHistory.forEach(item=>{
+
+let row=table.insertRow()
+
+row.insertCell(0).innerText=item.time
+row.insertCell(1).innerText=item.msg
+
+})
 
 }
 
-loadData()
+window.onload = loadData
 
 </script>
 
