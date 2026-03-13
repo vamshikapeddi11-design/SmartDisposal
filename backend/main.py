@@ -18,7 +18,7 @@ client = MongoClient("mongodb://localhost:27017")
 db = client.smart_disposal
 
 users = db.users
-
+bins = db.bin_levels
 class Login(BaseModel):
     email: str
     password: str
@@ -35,3 +35,18 @@ def login(user: Login):
         return {"message": "Login successful"}
 
     return {"message": "Invalid email or password"}
+    @app.get("/bin")
+def get_bin_data():
+
+    data = bins.find_one()
+
+    if data:
+        return {
+            "current_level": data.get("current_level", 0),
+            "history": data.get("history", [])
+        }
+
+    return {
+        "current_level": 0,
+        "history": []
+    }
