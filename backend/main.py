@@ -27,20 +27,25 @@ def login(user: dict):
 
 
 @app.get("/bin-data")
+@app.get("/bin-data")
 def bin_data():
 
-    latest = bins.find_one(sort=[("_id",-1)])
+    data = list(bins.find())
+
+    if not data:
+        return {"current_level":0,"history":[]}
+
+    latest = data[-1]
 
     history = []
 
-    for item in bins.find().sort("_id",-1).limit(5):
-
+    for item in data:
         history.append({
-            "time":item["time"],
-            "level":item["level"]
+            "time": item["time"],
+            "level": item["level"]
         })
 
     return {
-        "current_level":latest["level"],
-        "history":history
+        "current_level": latest["level"],
+        "history": history
     }
