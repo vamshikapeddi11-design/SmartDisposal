@@ -12,6 +12,7 @@ bins = db.bin_levels
 
 
 @app.post("/login")
+@app.post("/login")
 def login(user: dict):
 
     db_user = users.find_one({
@@ -23,7 +24,6 @@ def login(user: dict):
         return {"message":"Login successful"}
 
     return {"message":"Invalid login"}
-
 
 
 @app.get("/bin-data")
