@@ -92,9 +92,11 @@ password:password
 })
 
 let data=await response.json()
-
-document.getElementById("message").innerText=data.message
-
+  if(data.message === "Login successful"){
+window.location.href = "dashboard.html"
+}else{
+document.getElementById("message").innerText="Invalid email or password"
+  }
 })
 
 </script>
