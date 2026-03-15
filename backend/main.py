@@ -19,11 +19,14 @@ db = client.smart_disposal
 
 users = db.users
 bins = db.bin_levels
+
+
 class Login(BaseModel):
     email: str
     password: str
-@app.post("/login")
 
+
+@app.post("/login")
 def login(user: Login):
 
     db_user = users.find_one({
@@ -35,7 +38,9 @@ def login(user: Login):
         return {"message": "Login successful"}
 
     return {"message": "Invalid email or password"}
-  @app.get("/bin")
+
+
+@app.get("/bin")
 def get_bin_data():
 
     data = bins.find_one({}, {"_id": 0})
