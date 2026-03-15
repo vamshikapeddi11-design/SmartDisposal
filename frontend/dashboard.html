@@ -1,80 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <title>Smart Disposal Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
 font-family: Arial;
 background:#f4f4f4;
-margin:0;
-}
-
-.header{
 text-align:center;
-background:#2c7be5;
-color:white;
-padding:20px;
 }
 
 .container{
-display:flex;
-justify-content:space-between;
-padding:20px;
-}
-
-.left{
-width:45%;
-}
-
-.right{
-width:45%;
+width:90%;
+margin:auto;
+display:grid;
+grid-template-columns:1fr 1fr;
+grid-template-rows:auto auto auto;
+gap:20px;
 }
 
 .box{
 background:white;
 padding:20px;
 border-radius:10px;
-box-shadow:0px 4px 8px rgba(0,0,0,0.2);
-margin-bottom:20px;
+box-shadow:0px 0px 10px gray;
 }
 
-#binLevel{
-font-size:35px;
-font-weight:bold;
-color:green;
-text-align:center;
+/* remove bullets in history */
+#history{
+list-style:none;
+padding-left:0;
+}
+
+/* history hidden until click */
+#historyBox{
+display:none;
+margin-top:10px;
+}
+
+/* graph position (top right) */
+#graphBox{
+grid-column:2;
+grid-row:1;
 }
 
 button{
 padding:10px 20px;
-margin:10px;
-background:#2c7be5;
-color:white;
-border:none;
-border-radius:5px;
+font-size:16px;
 cursor:pointer;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
 margin-top:10px;
-display:none;
-}
-
-th,td{
-border:1px solid #ccc;
-padding:10px;
-text-align:center;
-}
-
-.alert{
-color:red;
-font-weight:bold;
-font-size:20px;
 }
 
 </style>
@@ -83,53 +60,36 @@ font-size:20px;
 
 <body>
 
-<div class="header">
-<h1>Smart Disposal Dashboard</h1>
-</div>
+<h1>Smart Disposal System Dashboard</h1>
 
 <div class="container">
 
-<div class="left">
-
+<!-- Current Bin Level -->
 <div class="box">
-
 <h2>Current Bin Level</h2>
-
-<p id="binLevel">Loading...</p>
-
+<h3 id="level">Loading...</h3>
 </div>
 
+<!-- Graph -->
+<div class="box" id="graphBox">
+<h2>Bin Level Graph</h2>
+<canvas id="binChart"></canvas>
+</div>
+
+<!-- Alerts -->
 <div class="box">
-
-<h2>Alert Section</h2>
-
+<h2>Alerts</h2>
 <p id="alertMessage">No alerts</p>
-
 </div>
 
-</div>
-
-<div class="right">
-
+<!-- View Bin History -->
 <div class="box">
+<h2>Bin History</h2>
 
-<button onclick="showBinHistory()">View Bin History</button>
-<button onclick="showAlertHistory()">View Alert History</button>
+<button onclick="toggleHistory()">View History</button>
 
-<table id="historyTable">
-<tr>
-<th>Time</th>
-<th>Level</th>
-</tr>
-</table>
-
-<table id="alertTable">
-<tr>
-<th>Time</th>
-<th>Alert</th>
-</tr>
-</table>
-
+<div id="historyBox">
+<ul id="history"></ul>
 </div>
 
 </div>
@@ -138,105 +98,108 @@ font-size:20px;
 
 <script>
 
-let binHistory=[]
-let alertHistory=[]
+async function loadBinData(){
 
-async function loadData(){
+const response = await fetch("http://127.0.0.1:8000/bin");
+const data = await response.json();
 
-try{
+let level = data.current_level;
+let status="";
 
-let response = await fetch("http://127.0.0.1:8000/bin")
+/* level status */
 
-let data = await response.json()
+if(level == 0){
+status="Empty";
+}
+else if(level <= 50){
+status="Half Full";
+}
+else if(level > 85){
+status="Full";
+}
+else{
+status="Almost Full";
+}
 
-document.getElementById("binLevel").innerText =
-data.current_level + "%"
+document.getElementById("level").innerText = level+"% ("+status+")";
 
-binHistory = data.history || []
+/* alert */
 
-if(data.current_level >= 80){
+let alertBox=document.getElementById("alertMessage");
 
-let msg="The bin is full"
+if(level > 85){
+alertBox.innerText="⚠ Bin is Full";
+alertBox.style.color="red";
+alertBox.style.fontWeight="bold";
+}
+else{
+alertBox.innerText="No alerts";
+alertBox.style.color="red";
+}
 
-document.getElementById("alertMessage").innerHTML =
-'<span class="alert">'+msg+'</span>'
+/* history */
 
-let time = new Date().toLocaleTimeString()
+let historyList=document.getElementById("history");
+historyList.innerHTML="";
 
-alertHistory.push({time:time,msg:msg})
+let labels=[];
+let values=[];
+
+data.history.forEach(item=>{
+
+let date=new Date(item.time);
+
+let time=date.toLocaleTimeString('en-US',{
+hour:'numeric',
+minute:'numeric',
+hour12:true
+});
+
+let li=document.createElement("li");
+li.innerText=time+" - "+item.level+"%";
+historyList.appendChild(li);
+
+labels.push(time);
+values.push(item.level);
+
+});
+
+createChart(labels,values);
 
 }
 
+function toggleHistory(){
+
+let box=document.getElementById("historyBox");
+
+if(box.style.display==="none"){
+box.style.display="block";
+}else{
+box.style.display="none";
 }
-catch(error){
-
-document.getElementById("binLevel").innerText="Error loading data"
-
-}
-
-}
-
-function showBinHistory(){
-
-let table=document.getElementById("historyTable")
-
-table.style.display="table"
-
-table.innerHTML="<tr><th>Time</th><th>Level</th></tr>"
-
-if(binHistory.length===0){
-
-let row=table.insertRow()
-let cell=row.insertCell(0)
-
-cell.colSpan=2
-cell.innerText="No history available"
-
-return
-}
-
-binHistory.forEach(item=>{
-
-let row=table.insertRow()
-
-row.insertCell(0).innerText=item.time
-row.insertCell(1).innerText=item.level+"%"
-
-})
 
 }
 
-function showAlertHistory(){
+function createChart(labels,values){
 
-let table=document.getElementById("alertTable")
+const ctx=document.getElementById("binChart").getContext("2d");
 
-table.style.display="table"
-
-table.innerHTML="<tr><th>Time</th><th>Alert</th></tr>"
-
-if(alertHistory.length===0){
-
-let row=table.insertRow()
-let cell=row.insertCell(0)
-
-cell.colSpan=2
-cell.innerText="No alerts"
-
-return
+new Chart(ctx,{
+type:'line',
+data:{
+labels:labels,
+datasets:[{
+label:'Bin Level',
+data:values,
+borderColor:'green',
+fill:false
+}]
 }
-
-alertHistory.forEach(item=>{
-
-let row=table.insertRow()
-
-row.insertCell(0).innerText=item.time
-row.insertCell(1).innerText=item.msg
-
-})
+});
 
 }
 
-window.onload = loadData
+loadBinData();
 
 </script>
 
