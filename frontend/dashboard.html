@@ -8,50 +8,131 @@
 <style>
 
 body{
-font-family: Arial;
-background:#f4f4f4;
-text-align:center;
+margin:0;
+font-family:Arial;
+background:#eef2f7;
 }
 
-.container{
-width:90%;
-margin:auto;
-display:grid;
-grid-template-columns:1fr 1fr;
-grid-template-rows:auto auto auto;
-gap:20px;
+/* TOP BAR */
+
+.topbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+background:#1f3c88;
+color:white;
+padding:12px 20px;
 }
+
+.title{
+margin:0;
+}
+
+/* ACCOUNT */
+
+.account{
+position:relative;
+cursor:pointer;
+}
+
+.menu{
+display:none;
+position:absolute;
+right:0;
+background:white;
+color:black;
+border:1px solid #ccc;
+width:130px;
+}
+
+.menu p{
+margin:0;
+padding:10px;
+cursor:pointer;
+}
+
+.menu p:hover{
+background:#eee;
+}
+
+/* DASHBOARD LAYOUT */
+
+.dashboard{
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:220px;
+background:#0f3057;
+color:white;
+padding:20px;
+}
+
+.sidebar h3{
+cursor:pointer;
+margin-bottom:20px;
+}
+
+.sidebar h3:hover{
+color:#00d4ff;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+padding:30px;
+}
+
+/* BOX */
 
 .box{
 background:white;
 padding:20px;
-border-radius:10px;
-box-shadow:0px 0px 10px gray;
+border-radius:12px;
+box-shadow:0px 4px 12px rgba(0,0,0,0.1);
 }
 
-/* remove bullets in history */
+/* BIN INDICATOR */
+
+.bin-container{
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.bin{
+width:80px;
+height:120px;
+border:4px solid #444;
+border-radius:10px;
+position:relative;
+overflow:hidden;
+background:#f5f5f5;
+margin-bottom:10px;
+}
+
+#binFill{
+position:absolute;
+bottom:0;
+width:100%;
+height:0%;
+background:green;
+transition:0.5s;
+}
+
+/* HISTORY */
+
 #history{
 list-style:none;
 padding-left:0;
 }
 
-/* history hidden until click */
-#historyBox{
-display:none;
-margin-top:10px;
-}
-
-/* graph position (top right) */
-#graphBox{
-grid-column:2;
-grid-row:1;
-}
-
-button{
-padding:10px 20px;
-font-size:16px;
-cursor:pointer;
-margin-top:10px;
+canvas{
+margin-top:20px;
 }
 
 </style>
@@ -60,36 +141,91 @@ margin-top:10px;
 
 <body>
 
-<h1>Smart Disposal System Dashboard</h1>
+<!-- TOP BAR -->
 
-<div class="container">
+<div class="topbar">
 
-<!-- Current Bin Level -->
-<div class="box">
+<h2 class="title">Smart Disposal Dashboard</h2>
+
+<div class="account" onclick="toggleMenu()">
+
+<span id="userEmail"></span> ▼
+
+<div class="menu" id="menu">
+<p onclick="showProfile()">My Profile</p>
+<p onclick="logout()">Logout</p>
+</div>
+
+</div>
+
+</div>
+
+<div class="dashboard">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h3 onclick="showSection('levelSection')">Current Bin Level</h3>
+
+<h3 onclick="showSection('alertSection')">Alerts</h3>
+
+<h3 onclick="showSection('historySection')">Bin History</h3>
+
+<h3 onclick="showSection('graphSection')">Bin Graph</h3>
+
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+<div id="levelSection" class="box section">
+
 <h2>Current Bin Level</h2>
-<h3 id="level">Loading...</h3>
+
+<div class="bin-container">
+
+<div class="bin">
+<div id="binFill"></div>
 </div>
 
-<!-- Graph -->
-<div class="box" id="graphBox">
-<h2>Bin Level Graph</h2>
-<canvas id="binChart"></canvas>
+<h3 id="level"></h3>
+
 </div>
 
-<!-- Alerts -->
-<div class="box">
+</div>
+
+<div id="alertSection" class="box section" style="display:none">
+
 <h2>Alerts</h2>
-<p id="alertMessage">No alerts</p>
+
+<p id="alertMessage"></p>
+
 </div>
 
-<!-- View Bin History -->
-<div class="box">
+<div id="historySection" class="box section" style="display:none">
+
 <h2>Bin History</h2>
 
-<button onclick="toggleHistory()">View History</button>
-
-<div id="historyBox">
 <ul id="history"></ul>
+
+</div>
+
+<div id="graphSection" class="box section" style="display:none">
+
+<h2>Bin Level Graph</h2>
+
+<canvas id="binChart"></canvas>
+
+</div>
+
+<div id="profileSection" class="box section" style="display:none">
+
+<h2>My Profile</h2>
+
+<p>Email: <span id="profileEmail"></span></p>
+
 </div>
 
 </div>
@@ -98,51 +234,125 @@ margin-top:10px;
 
 <script>
 
+/* SHOW SECTIONS */
+
+function showSection(id){
+
+document.querySelectorAll(".section").forEach(sec=>{
+sec.style.display="none";
+});
+
+document.getElementById(id).style.display="block";
+
+}
+
+/* ACCOUNT MENU */
+
+function toggleMenu(){
+
+let menu=document.getElementById("menu");
+
+if(menu.style.display==="block"){
+menu.style.display="none";
+}
+else{
+menu.style.display="block";
+}
+
+}
+
+/* PROFILE */
+
+function showProfile(){
+showSection("profileSection");
+}
+
+/* LOGOUT */
+
+function logout(){
+
+localStorage.removeItem("email");
+
+window.location.href="login.html";
+
+}
+
+/* USER EMAIL */
+
+let email=localStorage.getItem("email");
+
+document.getElementById("userEmail").innerText=email;
+
+document.getElementById("profileEmail").innerText=email;
+
+/* LOAD BIN DATA */
+
 async function loadBinData(){
 
-const response = await fetch("http://127.0.0.1:8000/bin");
-const data = await response.json();
+const response=await fetch("http://127.0.0.1:8000/bin");
 
-let level = data.current_level;
+const data=await response.json();
+
+let level=data.current_level;
+
 let status="";
 
-/* level status */
-
-if(level == 0){
+if(level==0){
 status="Empty";
 }
-else if(level <= 50){
+else if(level<=50){
 status="Half Full";
 }
-else if(level > 85){
+else if(level>85){
 status="Full";
 }
 else{
 status="Almost Full";
 }
 
-document.getElementById("level").innerText = level+"% ("+status+")";
+document.getElementById("level").innerText=level+"% ("+status+")";
 
-/* alert */
+/* BIN VISUAL */
+
+let fill=document.getElementById("binFill");
+
+fill.style.height=level+"%";
+
+if(level<=50){
+fill.style.background="green";
+}
+else if(level<=85){
+fill.style.background="orange";
+}
+else{
+fill.style.background="red";
+}
+
+/* ALERT */
 
 let alertBox=document.getElementById("alertMessage");
 
-if(level > 85){
+if(level>85){
+
 alertBox.innerText="⚠ Bin is Full";
+
 alertBox.style.color="red";
+
 alertBox.style.fontWeight="bold";
+
 }
 else{
 alertBox.innerText="No alerts";
-alertBox.style.color="red";
 }
 
-/* history */
+/* HISTORY */
 
 let historyList=document.getElementById("history");
+
 historyList.innerHTML="";
 
 let labels=[];
+
 let values=[];
 
 data.history.forEach(item=>{
@@ -156,29 +366,435 @@ hour12:true
 });
 
 let li=document.createElement("li");
+
 li.innerText=time+" - "+item.level+"%";
+
 historyList.appendChild(li);
 
 labels.push(time);
+
 values.push(item.level);
 
 });
+
+/* GRAPH */
 
 createChart(labels,values);
 
 }
 
-function toggleHistory(){
+/* GRAPH FUNCTION */
 
-let box=document.getElementById("historyBox");
+function createChart(labels,values){
 
-if(box.style.display==="none"){
-box.style.display="block";
-}else{
-box.style.display="none";
+const ctx=document.getElementById("binChart").getContext("2d");
+
+new Chart(ctx,{
+type:'line',
+data:{
+labels:labels,
+datasets:[{
+label:'Bin Level',
+data:values,
+borderColor:'green',
+fill:false
+}]
+}
+});
+
+}
+
+loadBinData();
+
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+<title>Smart Disposal Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#eef2f7;
+}
+
+/* TOP BAR */
+
+.topbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+background:#1f3c88;
+color:white;
+padding:12px 20px;
+}
+
+.title{
+margin:0;
+}
+
+/* ACCOUNT */
+
+.account{
+position:relative;
+cursor:pointer;
+}
+
+.menu{
+display:none;
+position:absolute;
+right:0;
+background:white;
+color:black;
+border:1px solid #ccc;
+width:130px;
+}
+
+.menu p{
+margin:0;
+padding:10px;
+cursor:pointer;
+}
+
+.menu p:hover{
+background:#eee;
+}
+
+/* DASHBOARD LAYOUT */
+
+.dashboard{
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:220px;
+background:#0f3057;
+color:white;
+padding:20px;
+}
+
+.sidebar h3{
+cursor:pointer;
+margin-bottom:20px;
+}
+
+.sidebar h3:hover{
+color:#00d4ff;
+}
+
+/* CONTENT */
+
+.content{
+flex:1;
+padding:30px;
+}
+
+/* BOX */
+
+.box{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0px 4px 12px rgba(0,0,0,0.1);
+}
+
+/* BIN INDICATOR */
+
+.bin-container{
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.bin{
+width:80px;
+height:120px;
+border:4px solid #444;
+border-radius:10px;
+position:relative;
+overflow:hidden;
+background:#f5f5f5;
+margin-bottom:10px;
+}
+
+#binFill{
+position:absolute;
+bottom:0;
+width:100%;
+height:0%;
+background:green;
+transition:0.5s;
+}
+
+/* HISTORY */
+
+#history{
+list-style:none;
+padding-left:0;
+}
+
+canvas{
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+
+<div class="topbar">
+
+<h2 class="title">Smart Disposal Dashboard</h2>
+
+<div class="account" onclick="toggleMenu()">
+
+<span id="userEmail"></span> ▼
+
+<div class="menu" id="menu">
+<p onclick="showProfile()">My Profile</p>
+<p onclick="logout()">Logout</p>
+</div>
+
+</div>
+
+</div>
+
+<div class="dashboard">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h3 onclick="showSection('levelSection')">Current Bin Level</h3>
+
+<h3 onclick="showSection('alertSection')">Alerts</h3>
+
+<h3 onclick="showSection('historySection')">Bin History</h3>
+
+<h3 onclick="showSection('graphSection')">Bin Graph</h3>
+
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+<div id="levelSection" class="box section">
+
+<h2>Current Bin Level</h2>
+
+<div class="bin-container">
+
+<div class="bin">
+<div id="binFill"></div>
+</div>
+
+<h3 id="level"></h3>
+
+</div>
+
+</div>
+
+<div id="alertSection" class="box section" style="display:none">
+
+<h2>Alerts</h2>
+
+<p id="alertMessage"></p>
+
+</div>
+
+<div id="historySection" class="box section" style="display:none">
+
+<h2>Bin History</h2>
+
+<ul id="history"></ul>
+
+</div>
+
+<div id="graphSection" class="box section" style="display:none">
+
+<h2>Bin Level Graph</h2>
+
+<canvas id="binChart"></canvas>
+
+</div>
+
+<div id="profileSection" class="box section" style="display:none">
+
+<h2>My Profile</h2>
+
+<p>Email: <span id="profileEmail"></span></p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SHOW SECTIONS */
+
+function showSection(id){
+
+document.querySelectorAll(".section").forEach(sec=>{
+sec.style.display="none";
+});
+
+document.getElementById(id).style.display="block";
+
+}
+
+/* ACCOUNT MENU */
+
+function toggleMenu(){
+
+let menu=document.getElementById("menu");
+
+if(menu.style.display==="block"){
+menu.style.display="none";
+}
+else{
+menu.style.display="block";
 }
 
 }
+
+/* PROFILE */
+
+function showProfile(){
+showSection("profileSection");
+}
+
+/* LOGOUT */
+
+function logout(){
+
+localStorage.removeItem("email");
+
+window.location.href="login.html";
+
+}
+
+/* USER EMAIL */
+
+let email=localStorage.getItem("email");
+
+document.getElementById("userEmail").innerText=email;
+
+document.getElementById("profileEmail").innerText=email;
+
+/* LOAD BIN DATA */
+
+async function loadBinData(){
+
+const response=await fetch("http://127.0.0.1:8000/bin");
+
+const data=await response.json();
+
+let level=data.current_level;
+
+let status="";
+
+if(level==0){
+status="Empty";
+}
+else if(level<=50){
+status="Half Full";
+}
+else if(level>85){
+status="Full";
+}
+else{
+status="Almost Full";
+}
+
+document.getElementById("level").innerText=level+"% ("+status+")";
+
+/* BIN VISUAL */
+
+let fill=document.getElementById("binFill");
+
+fill.style.height=level+"%";
+
+if(level<=50){
+fill.style.background="green";
+}
+else if(level<=85){
+fill.style.background="orange";
+}
+else{
+fill.style.background="red";
+}
+
+/* ALERT */
+
+let alertBox=document.getElementById("alertMessage");
+
+if(level>85){
+
+alertBox.innerText="⚠ Bin is Full";
+
+alertBox.style.color="red";
+
+alertBox.style.fontWeight="bold";
+
+}
+else{
+alertBox.innerText="No alerts";
+}
+
+/* HISTORY */
+
+let historyList=document.getElementById("history");
+
+historyList.innerHTML="";
+
+let labels=[];
+
+let values=[];
+
+data.history.forEach(item=>{
+
+let date=new Date(item.time);
+
+let time=date.toLocaleTimeString('en-US',{
+hour:'numeric',
+minute:'numeric',
+hour12:true
+});
+
+let li=document.createElement("li");
+
+li.innerText=time+" - "+item.level+"%";
+
+historyList.appendChild(li);
+
+labels.push(time);
+
+values.push(item.level);
+
+});
+
+/* GRAPH */
+
+createChart(labels,values);
+
+}
+
+/* GRAPH FUNCTION */
 
 function createChart(labels,values){
 
